@@ -228,3 +228,31 @@ public static class Vent_CanUse
         }
     }
 }
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
+public static class NoKillCooldownPatch
+{
+    public static void Prefix(PlayerControl __instance)
+    {
+        if (!CheatToggles.zeroKillCd)
+            return;
+        if (CheatToggles.zeroKillCd && __instance.killTimer > 0f)
+        {
+            __instance.SetKillTimer(0f);
+        }
+        if (!__instance.AmOwner || __instance.Data == null || __instance.Data.Role == null)
+            return;
+
+        if (!__instance.Data.Role.CanUseKillButton)
+            return;
+
+        __instance.killTimer = 0f;
+
+        var hud = DestroyableSingleton<HudManager>.Instance;
+      
+  if (hud?.KillButton != null)
+        {
+            float maxCd = GameOptionsManager.Instance?.CurrentGameOptions?.GetFloat(FloatOptionNames.KillCooldown) ?? 10f;
+            hud.KillButton.SetCoolDown(0f, maxCd);
+        }
+    }
+}
